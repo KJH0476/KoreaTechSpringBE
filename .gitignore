@@ -38,3 +38,6 @@ out/
 
 ### SECRET INFO ###
 application-SECRET.properties
+
+### MAC OS ###
+.DS_Store
