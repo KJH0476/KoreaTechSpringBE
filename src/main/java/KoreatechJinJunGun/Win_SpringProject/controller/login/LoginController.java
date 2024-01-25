@@ -54,8 +54,12 @@ public class LoginController {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + token);
 
+        // 응답 바디에 메세지 담아서 반환
+        Map<String, String> body = new ConcurrentHashMap<>();
+        body.put("message", "success login");
+
         //로그인 성공시 200 반환
-        return new ResponseEntity<>(headers, HttpStatus.OK);
+        return new ResponseEntity<>(body, headers, HttpStatus.OK);
     }
 
     @GetMapping("/admin/test")
