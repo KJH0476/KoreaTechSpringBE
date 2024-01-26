@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> {
                     authorize
                             //모두에게 허용
-                            .requestMatchers("/", "/add", "/login", "/logout", "/css/**", "/*.ico", "/error", "/image/**", "/javascript/**").permitAll()
+                            .requestMatchers("/", "/signup", "/checkUsername", "/login", "/logout", "/css/**", "/*.ico", "/error", "/image/**", "/javascript/**").permitAll()
                             //관리자 ADMIN 에게만 허용
                             .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                             //로그인한 일반 사용자 USER, 관리자 ADMIN 모두 허용
