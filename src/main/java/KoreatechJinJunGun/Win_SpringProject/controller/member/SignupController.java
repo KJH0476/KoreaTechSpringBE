@@ -1,7 +1,6 @@
 package KoreatechJinJunGun.Win_SpringProject.controller.member;
 
 import KoreatechJinJunGun.Win_SpringProject.entity.member.Member;
-import KoreatechJinJunGun.Win_SpringProject.entity.member.Role;
 import KoreatechJinJunGun.Win_SpringProject.entity.member.SignUpForm;
 import KoreatechJinJunGun.Win_SpringProject.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +12,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,17 +38,8 @@ public class SignupController {
         }
 
         //회원가입 성공 로직
-        LocalDateTime createTime = LocalDateTime.now();
+        Member member = memberService.signupMember(signUpForm);
 
-        Member member = memberService.addMember(Member.builder()
-                .email(signUpForm.getEmail())
-                .password(signUpForm.getPassword())
-                .username(signUpForm.getUsername())
-                .nickname((signUpForm.getNickname().isEmpty()) ? signUpForm.getUsername() : signUpForm.getNickname())
-                .createdate(Timestamp.valueOf(createTime))
-                .birth(signUpForm.getBirth())
-                .role(Role.USER)
-                .build());
         message.put("message", "Success Signup");
         //성공 200 반환
         return new ResponseEntity<>(message, HttpStatus.OK);
