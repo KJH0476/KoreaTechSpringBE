@@ -1,16 +1,17 @@
 package KoreatechJinJunGun.Win_SpringProject.service.member;
 
 import KoreatechJinJunGun.Win_SpringProject.entity.member.Member;
+import KoreatechJinJunGun.Win_SpringProject.entity.member.Role;
+import KoreatechJinJunGun.Win_SpringProject.entity.member.SignUpForm;
 import KoreatechJinJunGun.Win_SpringProject.repository.member.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -19,8 +20,21 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public Member addMember(Member member){
+    public Member signupMember(SignUpForm signUpForm){
+        LocalDateTime createTime = LocalDateTime.now();
+
+        //새로운 회원 생성 후 저장
+        Member member = Member.builder()
+                .email(signUpForm.getEmail())
+                .password(passwordEncoder.encode(signUpForm.getPassword()))
+                .username(signUpForm.getUsername())
+                .nickname((signUpForm.getNickname().isEmpty()) ? signUpForm.getUsername() : signUpForm.getNickname())
+                .createdate(Timestamp.valueOf(createTime))
+                .birth(signUpForm.getBirth())
+                .role(Role.USER)
+                .build();
         return memberRepository.save(member);
     }
 
