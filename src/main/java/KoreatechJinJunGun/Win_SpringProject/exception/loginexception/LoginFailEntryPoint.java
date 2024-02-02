@@ -16,6 +16,7 @@ public class LoginFailEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         //아이디, 비번 틀렸을 떄와 토큰이 유효하지 않을때 401 반환
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);    //401 에러
-        response.getWriter().write("Wrong Id or Password!!!");
+        response.addHeader("Error-Message", "UNAUTHORIZED");
+        response.getWriter().write("UNAUTHORIZED USER");
     }
 }
