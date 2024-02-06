@@ -2,7 +2,7 @@ package KoreatechJinJunGun.Win_SpringProject.service.login;
 
 import KoreatechJinJunGun.Win_SpringProject.entity.member.token.RefreshToken;
 import KoreatechJinJunGun.Win_SpringProject.entity.member.token.TokenDto;
-import KoreatechJinJunGun.Win_SpringProject.exception.loginexception.MyExpiredJwtException;
+import KoreatechJinJunGun.Win_SpringProject.security.loginexception.MyExpiredJwtException;
 import KoreatechJinJunGun.Win_SpringProject.service.member.token.RefreshTokenService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

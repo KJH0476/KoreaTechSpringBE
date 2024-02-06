@@ -1,4 +1,4 @@
-package KoreatechJinJunGun.Win_SpringProject.exception.loginexception;
+package KoreatechJinJunGun.Win_SpringProject.security.loginexception;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
