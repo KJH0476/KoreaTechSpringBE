@@ -1,5 +1,8 @@
 package KoreatechJinJunGun.Win_SpringProject.filter;
 
+import KoreatechJinJunGun.Win_SpringProject.entity.member.Role;
+import KoreatechJinJunGun.Win_SpringProject.entity.member.token.RefreshToken;
+import KoreatechJinJunGun.Win_SpringProject.entity.member.token.TokenDto;
 import KoreatechJinJunGun.Win_SpringProject.exception.loginexception.MyExpiredJwtException;
 import KoreatechJinJunGun.Win_SpringProject.service.login.JwtTokenService;
 import jakarta.servlet.FilterChain;
@@ -11,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
@@ -29,32 +33,68 @@ public class JwtFilter extends GenericFilterBean {
         HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
         //요청 헤더의 토큰 값을 가져온다.
         String jwt = getRequestAuthToken(httpServletRequest);
-        String requestURI = httpServletRequest.getRequestURI();
 
         /**
          * 요청헤더의 토큰이 존재하고, 토큰의 유효성이 검증되면 권한 정보를 SpringContextHolder에 저장한다.
          * 모든 요청에 대해 JWT 토큰을 분석하고 인증 상태를 설정하는 역할, 주로 API 요청에서 사용자의 인증 상태를 관리하는 데 사용 (LoginService에서 인증 정보 저장하는 것과 다른 역할)
          * RESTful API와 같은 Stateless 환경에서는 각 요청이 독립적으로 처리되어야 하므로, 모든 요청에서 인증 정보를 검증하고 SecurityContext에 저장해야 함
          */
-        try{
+        try {
             if (StringUtils.hasText(jwt) && jwtTokenService.validateToken(jwt)) {
                 Authentication authentication = jwtTokenService.getAuthentication(jwt);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.info("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}", authentication.getName(), requestURI);
-            } else {
-                log.info("유효한 JWT 토큰이 없습니다, uri: {}", requestURI);
+                log.info("Email={}' 인증 정보 저장, uri={}", authentication.getName(), httpServletRequest.getRequestURI());
             }
-            //다음 필터를 실행해준다.
             filterChain.doFilter(servletRequest, servletResponse);
         } catch (MyExpiredJwtException e) {
-            //토큰 만료시 헤더에 메시지를 넣어주어 401에러 반환
-            //JwtFilter는 서블릿 필터 스프링 시큐리티에서 자동으로 처리해주지 않음 (AuthenticationEntryPoint에서 처리 X)
-            //따라서 원하는 예외를 처리해주고싶을시 해당 filter에서 바로 응답값을 반환
-            httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpServletResponse.addHeader("Error-Message", "TOKEN_EXPIRED");
-            httpServletResponse.getWriter().write("ACCESS TOKEN EXPIRED");
+            //액세스 토큰 만료 시 아래 메서드 실행 (로그인 갱신 시도)
+            handleExpiredAccessToken(httpServletRequest, httpServletResponse, jwt);
         }
     }
+
+    /**
+     * 액세스 토큰 만료 시 바로 리프레시 토큰을 검증한 후 유효할 경우 액세스 토큰와 리프레시 토큰을 다시 발급해준다.
+     * 만약 리프레시 토큰 또한 만료되어 db에 존재하지 않을 경우 클라이언트가 다시 로그인 해야 한다는 응답을 준다. (로그아웃 처리)
+     */
+    private void handleExpiredAccessToken(HttpServletRequest request, HttpServletResponse response, String jwt) throws IOException {
+        String email = jwtTokenService.getAuthentication(jwt).getName();
+        RefreshToken refreshToken = jwtTokenService.getRefreshToken(email);
+
+        try {
+            if (StringUtils.hasText(refreshToken.getRefreshToken()) && jwtTokenService.validateToken(refreshToken.getRefreshToken())) {
+                //기존 리프레시 토큰 삭제
+                jwtTokenService.invalidateToken(email);
+
+                //새로운 액세스 토큰, 리프레시 토큰 생성
+                TokenDto token = TokenDto.builder()
+                        .accessToken(jwtTokenService.createAccessToken(email, Role.USER.getKey()))
+                        .refreshToken(jwtTokenService.createRefreshToken())
+                        .build();
+
+                //인증 객체 생성
+                Authentication authentication = jwtTokenService.getAuthentication(token.getAccessToken());
+
+                //인증 정보 저장
+                SecurityContext context = SecurityContextHolder.getContext();
+                context.setAuthentication(authentication);
+
+                //새로운 갱신토큰 저장
+                jwtTokenService.addRefreshToken(token.getRefreshToken(), email);
+
+                //로그인 갱신 성공시 헤더에 새로 생성한 액세스 토큰과 상태 코드 200 응답
+                response.setHeader("Authorization", "Bearer " + token.getAccessToken());
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.getWriter().write("New tokens are provided");
+            }
+        } catch (NullPointerException ex) {
+            //db에 refresh 토큰 기간이 만료되어 삭제되면 null을 반환하고 이를 조회할 시 NullPointerException 발생
+            //리프레시 토큰 또한 만료되면 헤더에 메세지 넣어 클라이언트에게 다시 로그인 요청 상태코드 401 응답
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.addHeader("Error-Message", "REFRESH_TOKEN_EXPIRED");
+            response.getWriter().write("Refresh token expired too, try login again");
+        }
+    }
+
     // Request Header 에서 토큰 정보를 꺼내오기 위한 메소드
     private String getRequestAuthToken(HttpServletRequest request) {
         //요청 헤더 'Authorization' 값
