@@ -1,4 +1,4 @@
-package KoreatechJinJunGun.Win_SpringProject;
+package KoreatechJinJunGun.Win_SpringProject.config;
 
 import KoreatechJinJunGun.Win_SpringProject.entity.member.Role;
 import KoreatechJinJunGun.Win_SpringProject.exception.loginexception.LoginFailEntryPoint;
