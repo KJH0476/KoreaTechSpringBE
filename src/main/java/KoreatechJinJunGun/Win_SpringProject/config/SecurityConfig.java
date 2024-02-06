@@ -1,9 +1,10 @@
 package KoreatechJinJunGun.Win_SpringProject.config;
 
 import KoreatechJinJunGun.Win_SpringProject.entity.member.Role;
-import KoreatechJinJunGun.Win_SpringProject.exception.loginexception.LoginFailEntryPoint;
-import KoreatechJinJunGun.Win_SpringProject.exception.loginexception.MyAccessDeniedHandler;
+import KoreatechJinJunGun.Win_SpringProject.security.loginexception.LoginFailEntryPoint;
+import KoreatechJinJunGun.Win_SpringProject.security.loginexception.MyAccessDeniedHandler;
 import KoreatechJinJunGun.Win_SpringProject.filter.JwtFilter;
+import KoreatechJinJunGun.Win_SpringProject.security.logout.MyLogoutSuccessHandler;
 import KoreatechJinJunGun.Win_SpringProject.service.login.JwtTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class SecurityConfig {
     private final JwtTokenService jwtTokenService;
     private final LoginFailEntryPoint loginFailEntryPoint;
     private final MyAccessDeniedHandler myAccessDeniedHandler;
+    private final MyLogoutSuccessHandler myLogoutSuccessHandler;
 
     // PasswordEncoder는 BCryptPasswordEncoder를 사용
     @Bean
@@ -59,7 +61,7 @@ public class SecurityConfig {
                             .anyRequest().authenticated();  //로그인 사용자 모든 경로 접근 가능
                 })
                 .logout(logout -> logout    //로그아웃 설정
-                        .logoutSuccessUrl("/login")
+                        .logoutSuccessHandler(myLogoutSuccessHandler)
                         //로그아웃 시 저장된 인증정보 삭제
                         .addLogoutHandler(new SecurityContextLogoutHandler())
                         .clearAuthentication(true)
