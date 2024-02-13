@@ -53,11 +53,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> {
                     authorize
                             //모두에게 허용
-                            .requestMatchers("/", "/signup", "/signup/**", "/login", "/logout", "/css/**", "/*.ico", "/error", "/image/**", "/javascript/**").permitAll()
+                            .requestMatchers("/", "/signup", "/signup/**", "/login", "/logout", "/css/**", "/*.ico", "/error", "/img/**", "/js/**", "/static/**", "/templates/**", "/ws/**", "/messages/**", "/user/**", "/app/**").permitAll()
                             //관리자 ADMIN 에게만 허용
                             .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                             //로그인한 일반 사용자 USER, 관리자 ADMIN 모두 허용
-                            .requestMatchers("/user/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+                            //.requestMatchers("/user/**", "/app/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
                             .anyRequest().authenticated();  //로그인 사용자 모든 경로 접근 가능
                 })
                 .logout(logout -> logout    //로그아웃 설정
