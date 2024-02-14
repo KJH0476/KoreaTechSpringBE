@@ -1,10 +1,10 @@
 package KoreatechJinJunGun.Win_SpringProject.filter;
 
-import KoreatechJinJunGun.Win_SpringProject.entity.member.Role;
-import KoreatechJinJunGun.Win_SpringProject.entity.member.token.RefreshToken;
-import KoreatechJinJunGun.Win_SpringProject.entity.member.token.TokenDto;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.Role;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.token.RefreshToken;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.token.TokenDto;
 import KoreatechJinJunGun.Win_SpringProject.security.loginexception.MyExpiredJwtException;
-import KoreatechJinJunGun.Win_SpringProject.service.login.JwtTokenService;
+import KoreatechJinJunGun.Win_SpringProject.member.service.login.JwtTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;

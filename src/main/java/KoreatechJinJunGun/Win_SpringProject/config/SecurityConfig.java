@@ -1,11 +1,11 @@
 package KoreatechJinJunGun.Win_SpringProject.config;
 
-import KoreatechJinJunGun.Win_SpringProject.entity.member.Role;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.Role;
 import KoreatechJinJunGun.Win_SpringProject.security.loginexception.LoginFailEntryPoint;
 import KoreatechJinJunGun.Win_SpringProject.security.loginexception.MyAccessDeniedHandler;
 import KoreatechJinJunGun.Win_SpringProject.filter.JwtFilter;
 import KoreatechJinJunGun.Win_SpringProject.security.logout.MyLogoutSuccessHandler;
-import KoreatechJinJunGun.Win_SpringProject.service.login.JwtTokenService;
+import KoreatechJinJunGun.Win_SpringProject.member.service.login.JwtTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;

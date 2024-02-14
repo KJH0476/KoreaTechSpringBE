@@ -44,8 +44,9 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
 	//kurento
-	implementation 'org.kurento:kurento-client:6.18.0'
-	implementation 'org.kurento:kurento-utils-js:6.18.0'
+	implementation 'org.kurento:kurento-client:7.0.0'
+	implementation 'org.kurento:kurento-utils-js:7.0.0'
+	implementation group: 'com.google.guava', name: 'guava', version: '32.1.2-jre'
 }
 
 tasks.named('test') {

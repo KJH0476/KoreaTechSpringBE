@@ -1,6 +1,6 @@
 package KoreatechJinJunGun.Win_SpringProject.security.logout;
 
-import KoreatechJinJunGun.Win_SpringProject.service.login.JwtTokenService;
+import KoreatechJinJunGun.Win_SpringProject.member.service.login.JwtTokenService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
