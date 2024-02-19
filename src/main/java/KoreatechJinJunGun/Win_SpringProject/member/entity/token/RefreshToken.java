@@ -3,11 +3,13 @@ package KoreatechJinJunGun.Win_SpringProject.member.entity.token;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 
 @Getter
-@RedisHash(value = "token", timeToLive = 300)
+@RedisHash(value = "token", timeToLive = 120)
+@NoArgsConstructor
 public class RefreshToken {
 
     @Id
