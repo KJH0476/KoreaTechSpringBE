@@ -40,9 +40,9 @@ public class LoginTest {
                         .content(objectMapper.writeValueAsString(map)))
                 //then
                 .andExpect(MockMvcResultMatchers.status().isOk())   //http 상태 200
-                .andExpect(MockMvcResultMatchers.header().exists("Authorization"))  //토큰 반환하는 헤더가 존재하는지 확인
                 //성공 응답 바디 메시지 확인
-                .andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(Map.of("message", "success login"))));
+                .andExpect(MockMvcResultMatchers.content().json(objectMapper.writeValueAsString(Map.of("message", "success login"))))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.token").exists());
     }
 
     @Test

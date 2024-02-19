@@ -77,7 +77,7 @@ public class SignupTest {
 
         //별명 공백일 경우 별명==사용자명
         Member member = memberRepository.findByEmail(email).get();
-        Assertions.assertThat(member.getNickname()).isSameAs(member.getUsername());
+        Assertions.assertThat(member.getNickname()).isEqualTo(member.getUsername());
     }
 
     @Test
