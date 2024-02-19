@@ -5,12 +5,14 @@ import KoreatechJinJunGun.Win_SpringProject.member.entity.token.RefreshToken;
 import KoreatechJinJunGun.Win_SpringProject.member.entity.token.TokenDto;
 import KoreatechJinJunGun.Win_SpringProject.security.loginexception.MyExpiredJwtException;
 import KoreatechJinJunGun.Win_SpringProject.member.service.login.JwtTokenService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -20,12 +22,16 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class JwtFilter extends GenericFilterBean {
 
     private final JwtTokenService jwtTokenService;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -81,10 +87,15 @@ public class JwtFilter extends GenericFilterBean {
                 //새로운 갱신토큰 저장
                 jwtTokenService.addRefreshToken(token.getRefreshToken(), email);
 
+                //응답 바디 생성
+                Map<String, String> map = new ConcurrentHashMap<>();
+                map.put("message", "New tokens are provided");
+                map.put("token", token.getAccessToken());
+                String body = objectMapper.writeValueAsString(map);
+
                 //로그인 갱신 성공시 헤더에 새로 생성한 액세스 토큰과 상태 코드 200 응답
-                response.setHeader("Authorization", "Bearer " + token.getAccessToken());
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write("New tokens are provided");
+                response.getWriter().write(body);
             }
         } catch (NullPointerException ex) {
             //db에 refresh 토큰 기간이 만료되어 삭제되면 null을 반환하고 이를 조회할 시 NullPointerException 발생

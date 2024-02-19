@@ -39,18 +39,14 @@ public class LoginController {
             sb.append("입력해주세요.");
 
             //바디에 에러메세지 담아서 반환, 400 에러
-            return new ResponseEntity<>(makeResponseBody(sb.toString()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(makeResponseBody(sb.toString(), ""), HttpStatus.BAD_REQUEST);
         }
 
         //로그인 성공 로직
         TokenDto token = loginService.login(form);
 
-        //응답 헤더에 토큰을 넣어줌(최초 로그인시 액세스토큰 + 갱신토큰 둘다 발급)
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token.getAccessToken());
-
         //로그인 성공시 200 반환
-        return new ResponseEntity<>(makeResponseBody("success login"), headers, HttpStatus.OK);
+        return new ResponseEntity<>(makeResponseBody("success login", token.getAccessToken()), HttpStatus.OK);
     }
 
     @GetMapping("/admin/test")
@@ -64,9 +60,10 @@ public class LoginController {
     }
 
     //응답 바디 생성
-    private static Map<String, String> makeResponseBody(String bodyMessage){
+    private static Map<String, String> makeResponseBody(String bodyMessage, String token){
         Map<String, String> body = new ConcurrentHashMap<>();
         body.put("message", bodyMessage);
+        if(!token.isEmpty()) body.put("token", token);
         return body;
     }
 }
