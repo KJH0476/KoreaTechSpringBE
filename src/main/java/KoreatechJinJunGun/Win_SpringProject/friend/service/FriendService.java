@@ -24,21 +24,17 @@ public class FriendService {
 
     //전체 친구, 받은 요청, 보낸 요청 조회
     public List<Friend> findFriend(Long userId, Integer relationStatus){
-        Optional<Member> memberOp = memberRepository.findById(userId);
-        if(memberOp.isPresent()) {
-            return friendRepository.findByUserIdAndRelationStatus(memberOp.get(), relationStatus);
-        }
-        //불변한 빈 리스트 반환(리스트 변경불가) -> 추가 메모리 할당을 피할 수 있음
-        return Collections.emptyList();
+        return memberRepository.findById(userId)
+                .map(member -> friendRepository.findByUserIdAndRelationStatus(member, relationStatus))
+                .orElseGet(Collections::emptyList); // 불변한 빈 리스트 반환
     }
+
 
     //현재 친구 nickname 으로 검색
     public List<Friend> findSpecificFriend(Long userId, String nickname, Integer relationStatus){
-        Optional<Member> memberOp = memberRepository.findById(userId);
-        if(memberOp.isPresent()) {
-            return friendRepository.findByUserIdAndNicknameContainingAndRelationStatus(memberOp.get(), nickname, relationStatus);
-        }
-        return Collections.emptyList();
+        return memberRepository.findById(userId)
+                .map(member -> friendRepository.findByUserIdAndNicknameContainingAndRelationStatus(member, nickname, relationStatus))
+                .orElse(Collections.emptyList());
     }
 
     public void requestFriend(FriendDto friendDto) {
