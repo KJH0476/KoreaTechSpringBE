@@ -66,7 +66,7 @@ public class JwtFilter extends GenericFilterBean {
         String email = jwtTokenService.getAuthentication(jwt).getName();
         RefreshToken refreshToken = jwtTokenService.getRefreshToken(email);
 
-        try {
+        if(refreshToken!=null){
             if (StringUtils.hasText(refreshToken.getRefreshToken()) && jwtTokenService.validateToken(refreshToken.getRefreshToken())) {
                 //기존 리프레시 토큰 삭제
                 jwtTokenService.invalidateToken(email);
@@ -93,12 +93,13 @@ public class JwtFilter extends GenericFilterBean {
                 map.put("token", token.getAccessToken());
                 String body = objectMapper.writeValueAsString(map);
 
-                //로그인 갱신 성공시 헤더에 새로 생성한 액세스 토큰과 상태 코드 200 응답
-                response.setStatus(HttpServletResponse.SC_OK);
+                //로그인 갱신 성공시 헤더에 새로 생성한 액세스 토큰과 상태 코드 401 응답
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.addHeader("Error-Message", "NEW_ACCESS_TOKEN");
                 response.getWriter().write(body);
             }
-        } catch (NullPointerException ex) {
-            //db에 refresh 토큰 기간이 만료되어 삭제되면 null을 반환하고 이를 조회할 시 NullPointerException 발생
+        } else {
+            //db에 refresh 토큰 기간이 만료되어 삭제되면 null을 반환
             //리프레시 토큰 또한 만료되면 헤더에 메세지 넣어 클라이언트에게 다시 로그인 요청 상태코드 401 응답
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.addHeader("Error-Message", "REFRESH_TOKEN_EXPIRED");
