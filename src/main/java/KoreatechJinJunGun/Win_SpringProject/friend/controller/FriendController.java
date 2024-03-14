@@ -48,10 +48,10 @@ public class FriendController {
     //친구 요청
     @PostMapping("/request-friend")
     public ResponseEntity<Map<String, String>> addFriend(@RequestBody FriendDto friendDto){
-        friendService.requestFriend(friendDto);
+        String friendEmail = friendService.requestFriend(friendDto);
 
         //웹소켓 실시간 요청 알림을 친구에게 보냄
-        sendFriendRequestNotification(friendDto.getFriendId(), "새로운 친구 요청");
+        sendFriendRequestNotification(friendEmail, "새로운 친구 요청");
         log.info("친구 요청 완료 {} -> {}", friendDto.getId(), friendDto.getFriendId());
 
         return new ResponseEntity<>(getResponseBody("새로운 친구 요청"), HttpStatus.OK);
@@ -80,8 +80,10 @@ public class FriendController {
         return new ResponseEntity<>(getResponseBody(ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 
-    public void sendFriendRequestNotification(Long friendId, String sendMessage){
-        simpMessagingTemplate.convertAndSendToUser(String.valueOf(friendId), "/queue/friendNotification", sendMessage);
+    public void sendFriendRequestNotification(String friendEmail, String sendMessage){
+        //특정 사용자에게 메시지를 보내려 할 때 convertAndSendToUser 메서드의 첫 번째 인자는 SpringSecurity 가 관리하는 사용자 식별자와 일치해야 함
+        //현재 SpringSecurity 가 관리하는 식별자는 Email
+        simpMessagingTemplate.convertAndSendToUser(friendEmail, "/queue/friendNotification", sendMessage);
     }
 
     private Map<String, String> getResponseBody(String message){

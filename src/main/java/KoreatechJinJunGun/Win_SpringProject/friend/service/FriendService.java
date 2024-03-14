@@ -37,7 +37,7 @@ public class FriendService {
                 .orElse(Collections.emptyList());
     }
 
-    public void requestFriend(FriendDto friendDto) {
+    public String requestFriend(FriendDto friendDto) {
         Member member = memberRepository.findById(friendDto.getId())
                 .orElseThrow(() -> new NoSuchElementException("요청한 사용자를 찾을 수 없습니다."));
 
@@ -46,6 +46,9 @@ public class FriendService {
 
         createAndSaveFriend(friendMember, friendDto.getId(), member.getNickname(), 2);
         createAndSaveFriend(member, friendDto.getFriendId(), friendDto.getNickname(), 1);
+
+        //알림을 위해 요청을 받을 친구의 이메일 반환
+        return friendMember.getEmail();
     }
 
     private void createAndSaveFriend(Member user, Long friendId, String nickname, Integer relationStatus) {
