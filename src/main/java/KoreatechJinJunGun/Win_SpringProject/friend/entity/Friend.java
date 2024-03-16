@@ -1,6 +1,7 @@
 package KoreatechJinJunGun.Win_SpringProject.friend.entity;
 
 import KoreatechJinJunGun.Win_SpringProject.member.entity.Member;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,11 +22,16 @@ public class Friend {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", referencedColumnName = "id")
-    private Member userId;
-    private Long friendId;
-    private String nickname;
-    private Integer relationStatus;
+    @JoinColumn(name = "memberId", referencedColumnName = "id") // 현재 사용자
+    private Member member;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "friendMemberId", referencedColumnName = "id") // 친구 사용자
+    private Member friendMember;
+
+    @Enumerated(EnumType.STRING)
+    private FriendRelation relationStatus;
+
     private Date applyTime;
     private Date relationDate;
 }
