@@ -1,6 +1,7 @@
 package KoreatechJinJunGun.Win_SpringProject.member.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,9 @@ import java.util.Date;
 
 @Getter
 @Entity
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Member {
 
     @Id
@@ -26,14 +29,7 @@ public class Member {
     @Column(nullable = false)
     private Role role;
 
-    @Builder
-    public Member(Long id, String email, String password, String username, String nickname, Date createdate, String birth, Role role) {
-        this.email = email;
-        this.password = password;
-        this.username = username;
-        this.nickname = nickname;
-        this.createdate = createdate;
-        this.birth = birth;
-        this.role = role;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
 }

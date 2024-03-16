@@ -3,6 +3,7 @@ package KoreatechJinJunGun.Win_SpringProject.member.service;
 import KoreatechJinJunGun.Win_SpringProject.member.entity.Member;
 import KoreatechJinJunGun.Win_SpringProject.member.entity.Role;
 import KoreatechJinJunGun.Win_SpringProject.member.entity.SignUpForm;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.Status;
 import KoreatechJinJunGun.Win_SpringProject.member.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class MemberService {
                 .createdate(Timestamp.valueOf(createTime))
                 .birth(signUpForm.getBirth())
                 .role(Role.USER)
+                .status(Status.OFFLINE)
                 .build();
         return memberRepository.save(member);
     }
