@@ -50,4 +50,14 @@ public class MemberService {
         //같은 사용자 명이 존재하지 않으면 true 리턴, 존재할 경우 false 리턴
         return memberRepository.findByUsername(check).isEmpty();
     }
+
+    //로그인 사용자 정보 반환
+    public Member findLoginMember(String email){
+        return memberRepository.findByEmail(email).orElseThrow(()->new RuntimeException("사용자가 존재하지 않음"));
+    }
+
+    //온라인 오프라인 업데이트
+    public void updateOnlineOffline(Long memberId, Status status){
+        memberRepository.updateStatusByEmail(status, memberId);
+    }
 }
