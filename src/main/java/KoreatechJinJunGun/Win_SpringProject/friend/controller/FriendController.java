@@ -1,19 +1,19 @@
 package KoreatechJinJunGun.Win_SpringProject.friend.controller;
 
-import KoreatechJinJunGun.Win_SpringProject.friend.entity.Friend;
 import KoreatechJinJunGun.Win_SpringProject.friend.entity.FriendDto;
+import KoreatechJinJunGun.Win_SpringProject.friend.entity.FriendForm;
+import KoreatechJinJunGun.Win_SpringProject.friend.entity.FriendRelation;
 import KoreatechJinJunGun.Win_SpringProject.friend.service.FriendService;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.Status;
+import KoreatechJinJunGun.Win_SpringProject.member.service.MemberService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -25,52 +25,60 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FriendController {
 
     private final FriendService friendService;
+    private final MemberService memberService;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     //친구 조회
-    //usrId: 현재 로그인한 사용자 Id, status: 0(친구 관계), 1(보낸 요청), 2(받은 요청)
-    @GetMapping("/find-friend/{userId}/{status}")
-    public ResponseEntity<List<Friend>> searchAllFriend(@PathVariable("userId") Long userId, @PathVariable("status") Integer status) throws JsonProcessingException {
-        List<Friend> friends = friendService.findFriend(userId, status);
+    //memberId: 현재 로그인한 사용자 Id, status: FRIENDS(친구 관계), REQUESTED(보낸 요청), RECEIVED(받은 요청)
+    @GetMapping("/find-all-friend/{memberId}/{relationType}")
+    public ResponseEntity<List<FriendDto>> searchAllFriend(@PathVariable("memberId") Long memberId, @PathVariable("relationType") FriendRelation relationType) throws JsonProcessingException {
+        List<FriendDto> friends = friendService.findFriend(memberId, relationType);
 
         return new ResponseEntity<>(friends, HttpStatus.OK);
     }
 
-    //친구 검색(친구 관계 사용자 중에서 검색)
-    //url 파라미터로 검색한 nickname 보냄
-    @GetMapping("/search-friend/{userId}")
-    public ResponseEntity<List<Friend>> searchFriend(@PathVariable("userId") Long userId, @RequestParam("nickname") String nickname) throws JsonProcessingException {
-        List<Friend> friends = friendService.findSpecificFriend(userId, nickname, 0);
+    @GetMapping("/find-online-friend/{memberId}/{relationType}")
+    public ResponseEntity<List<FriendDto>> searchOnlineFriend(@PathVariable("memberId") Long memberId,
+                                                              @PathVariable("relationType") FriendRelation relationType) throws JsonProcessingException {
+        List<FriendDto> friends = friendService.findOnlineFriend(memberId, relationType);
 
         return new ResponseEntity<>(friends, HttpStatus.OK);
     }
 
     //친구 요청
     @PostMapping("/request-friend")
-    public ResponseEntity<Map<String, String>> addFriend(@RequestBody FriendDto friendDto){
-        String friendEmail = friendService.requestFriend(friendDto);
+    public ResponseEntity<Map<String, String>> addFriend(@RequestBody FriendForm friendForm){
+        List<String> requestFriend = friendService.requestFriend(friendForm);
 
         //웹소켓 실시간 요청 알림을 친구에게 보냄
-        sendFriendRequestNotification(friendEmail, "새로운 친구 요청");
-        log.info("친구 요청 완료 {} -> {}", friendDto.getId(), friendDto.getFriendId());
+        sendFriendRequestNotification(requestFriend.get(1), requestFriend.get(0)+" 님이 친구 요청을 보냈습니다.", "REQUEST");
+        log.info("친구 요청 완료 {} -> {}", friendForm.getMemberId(), friendForm.getFriendId());
 
         return new ResponseEntity<>(getResponseBody("새로운 친구 요청"), HttpStatus.OK);
     }
 
     //친구 수락
     @PostMapping("/received-friend")
-    public ResponseEntity<Map<String, String>> okFriend(@RequestBody FriendDto friendDto){
-        friendService.receivedFriend(friendDto.getId(), friendDto.getFriendId());
+    public ResponseEntity<Map<String, String>> okFriend(@RequestBody FriendForm friendForm){
+        friendService.receivedFriend(friendForm.getMemberId(), friendForm.getFriendId());
 
         return new ResponseEntity<>(getResponseBody("친구 요청을 수락하였습니다."), HttpStatus.OK);
     }
 
     //친구 삭제, 거절
     @PostMapping("/delete-friend")
-    public ResponseEntity<Map<String, String>> removeFriend(@RequestBody FriendDto friendDto){
-        friendService.removeEachFriend(friendDto.getId(), friendDto.getFriendId());
+    public ResponseEntity<Map<String, String>> removeFriend(@RequestBody FriendForm friendForm){
+        friendService.removeEachFriend(friendForm.getMemberId(), friendForm.getFriendId());
 
         return new ResponseEntity<>(getResponseBody("친구를 삭제하였습니다."), HttpStatus.OK);
+    }
+
+    //사용자가 온라인 오프라인 변할때 사용자의 친구들에게 친구 리스트 새로고침 메세지 보냄
+    @GetMapping("/update-status/{memberId}/{status}")
+    public ResponseEntity<Map<String, String>> clientConnectChange(@PathVariable("memberId") Long memberId, @PathVariable("status") Status status){
+        memberService.updateOnlineOffline(memberId, status);
+        sendRefreshFriendList(memberId, "친구 리스트 새로고침");
+        return new ResponseEntity<>(getResponseBody("update user for " + status), HttpStatus.OK);
     }
 
     //친구 요청 사용자를 찾을 수 없는 경우 -> 404
@@ -80,12 +88,23 @@ public class FriendController {
         return new ResponseEntity<>(getResponseBody(ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 
-    public void sendFriendRequestNotification(String friendEmail, String sendMessage){
+    //친구 요청 알림 메세지 전달
+    public void sendFriendRequestNotification(String friendEmail, String sendMessage, String status){
         //특정 사용자에게 메시지를 보내려 할 때 convertAndSendToUser 메서드의 첫 번째 인자는 SpringSecurity 가 관리하는 사용자 식별자와 일치해야 함
         //현재 SpringSecurity 가 관리하는 식별자는 Email
-        simpMessagingTemplate.convertAndSendToUser(friendEmail, "/queue/friendNotification", sendMessage);
+        simpMessagingTemplate.convertAndSendToUser(friendEmail, "/queue/Notification", sendMessage);
     }
 
+    //친구들에게 친구 리스트 새로고침 요청 메세지 전달
+    public void sendRefreshFriendList(Long memberId, String sendMessage){
+        log.info("reloadFriendList");
+        List<FriendDto> friend = friendService.findFriend(memberId, FriendRelation.FRIENDS);
+        for (FriendDto friendDto : friend) {
+            simpMessagingTemplate.convertAndSendToUser(friendDto.getFriendEmail(), "/queue/reloadFriendList", sendMessage);
+        }
+    }
+
+    //응답 바디 만드는 메소드
     private Map<String, String> getResponseBody(String message){
         Map<String, String> body = new ConcurrentHashMap<>();
         body.put("message", message);
