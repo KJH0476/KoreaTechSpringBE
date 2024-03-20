@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FriendForm {
 
-    private Long memberId;
-    private Long friendId;
+    private String memberName;
+    private String friendName;
 }

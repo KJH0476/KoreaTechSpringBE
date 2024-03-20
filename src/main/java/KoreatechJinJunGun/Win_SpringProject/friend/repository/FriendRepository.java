@@ -11,14 +11,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FriendRepository extends JpaRepository<Friend, Long> {
 
-    List<Friend> findByMemberAndRelationStatus(Member memberId, FriendRelation relationStatus);
+    List<Friend> findByMemberAndRelationStatus(Member member, FriendRelation relationStatus);
 
-    //Containing : % 와일드카드 붙여줌 --> LIKE %nickname%
-    //List<Friend> findByMemberAndNicknameContainingAndRelationStatus(Member userId, String nickname, Integer relationStatus);
+    Optional<Friend> findByMemberAndFriendMember(Member member, Member friendMember);
 
     //친구 서로 삭제
     @Modifying

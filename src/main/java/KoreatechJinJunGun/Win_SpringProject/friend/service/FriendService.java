@@ -45,18 +45,22 @@ public class FriendService {
         return onlineFriend;
     }
 
-    public List<String> requestFriend(FriendForm friendForm) {
-        Member member = memberRepository.findById(friendForm.getMemberId())
-                .orElseThrow(() -> new NoSuchElementException("요청한 사용자를 찾을 수 없습니다."));
+    public String requestFriend(FriendForm friendForm) {
+        Member member = memberRepository.findByUsername(friendForm.getMemberName())
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
 
-        Member friendMember = memberRepository.findById(friendForm.getFriendId())
-                .orElseThrow(() -> new NoSuchElementException("친구 사용자를 찾을 수 없습니다."));
+        Member friendMember = memberRepository.findByUsername(friendForm.getFriendName())
+                .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+
+        //이미 친구 요청을 했는지 확인
+        friendRepository.findByMemberAndFriendMember(member, friendMember)
+                .ifPresent(friend -> {throw new NoSuchElementException("이미 요청을 보내거나 받은 사용자입니다.");});
 
         createAndSaveFriend(friendMember, member, FriendRelation.RECEIVED);
         createAndSaveFriend(member, friendMember, FriendRelation.REQUESTED);
 
         //알림을 위해 요청을 받을 친구의 이메일 반환
-        return new ArrayList<>(List.of(member.getUsername(), friendMember.getEmail()));
+        return friendMember.getEmail();
     }
 
     private void createAndSaveFriend(Member member, Member friendMember, FriendRelation relationType) {
@@ -69,17 +73,17 @@ public class FriendService {
         friendRepository.save(friend);
     }
 
-    public void receivedFriend(Long userId, Long friendId){
+    public void receivedFriend(String memberName, String friendName){
         Date date = new Date(System.currentTimeMillis());
-        Member member = memberRepository.findById(userId).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
-        Member friendMember = memberRepository.findById(friendId).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+        Member member = memberRepository.findByUsername(memberName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+        Member friendMember = memberRepository.findByUsername(friendName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
         friendRepository.updateFriendRelation(FriendRelation.FRIENDS, date, member, friendMember);
         friendRepository.updateFriendRelation(FriendRelation.FRIENDS, date, friendMember, member);
     }
 
-    public void removeEachFriend(Long userId, Long friendId){
-        Member member = memberRepository.findById(userId).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
-        Member friendMember = memberRepository.findById(friendId).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+    public void removeEachFriend(String memberName, String friendName){
+        Member member = memberRepository.findByUsername(memberName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+        Member friendMember = memberRepository.findByUsername(memberName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
         friendRepository.deleteByMemberAndFriendMember(member, friendMember);
         friendRepository.deleteByMemberAndFriendMember(friendMember, member);
     }

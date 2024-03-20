@@ -47,12 +47,12 @@ public class FriendController {
 
     //친구 요청
     @PostMapping("/request-friend")
-    public ResponseEntity<Map<String, String>> addFriend(@RequestBody FriendForm friendForm){
-        List<String> requestFriend = friendService.requestFriend(friendForm);
+    public ResponseEntity<Map<String, String>> addFriend(@RequestBody FriendForm friendForm) {
+        String friendEmail = friendService.requestFriend(friendForm);
 
         //웹소켓 실시간 요청 알림을 친구에게 보냄
-        sendFriendRequestNotification(requestFriend.get(1), requestFriend.get(0)+" 님이 친구 요청을 보냈습니다.", "REQUEST");
-        log.info("친구 요청 완료 {} -> {}", friendForm.getMemberId(), friendForm.getFriendId());
+        sendFriendRequestNotification(friendEmail, friendForm.getMemberName() + " 님이 친구 요청을 보냈습니다.", "REQUEST");
+        log.info("친구 요청 완료 {} -> {}", friendForm.getMemberName(), friendForm.getFriendName());
 
         return new ResponseEntity<>(getResponseBody("새로운 친구 요청"), HttpStatus.OK);
     }
@@ -60,7 +60,7 @@ public class FriendController {
     //친구 수락
     @PostMapping("/received-friend")
     public ResponseEntity<Map<String, String>> okFriend(@RequestBody FriendForm friendForm){
-        friendService.receivedFriend(friendForm.getMemberId(), friendForm.getFriendId());
+        friendService.receivedFriend(friendForm.getMemberName(), friendForm.getFriendName());
 
         return new ResponseEntity<>(getResponseBody("친구 요청을 수락하였습니다."), HttpStatus.OK);
     }
@@ -68,7 +68,7 @@ public class FriendController {
     //친구 삭제, 거절
     @PostMapping("/delete-friend")
     public ResponseEntity<Map<String, String>> removeFriend(@RequestBody FriendForm friendForm){
-        friendService.removeEachFriend(friendForm.getMemberId(), friendForm.getFriendId());
+        friendService.removeEachFriend(friendForm.getMemberName(), friendForm.getFriendName());
 
         return new ResponseEntity<>(getResponseBody("친구를 삭제하였습니다."), HttpStatus.OK);
     }
@@ -81,11 +81,11 @@ public class FriendController {
         return new ResponseEntity<>(getResponseBody("update user for " + status), HttpStatus.OK);
     }
 
-    //친구 요청 사용자를 찾을 수 없는 경우 -> 404
+    //친구 요청 사용자를 찾을 수 없는 경우 -> 400
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<Map<String, String>> handleNoSuchElementException(NoSuchElementException ex) {
 
-        return new ResponseEntity<>(getResponseBody(ex.getMessage()), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(getResponseBody(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     //친구 요청 알림 메세지 전달
