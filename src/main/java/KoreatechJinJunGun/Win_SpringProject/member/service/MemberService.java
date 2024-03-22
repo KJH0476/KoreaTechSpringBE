@@ -1,9 +1,6 @@
 package KoreatechJinJunGun.Win_SpringProject.member.service;
 
-import KoreatechJinJunGun.Win_SpringProject.member.entity.Member;
-import KoreatechJinJunGun.Win_SpringProject.member.entity.Role;
-import KoreatechJinJunGun.Win_SpringProject.member.entity.SignUpForm;
-import KoreatechJinJunGun.Win_SpringProject.member.entity.Status;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.*;
 import KoreatechJinJunGun.Win_SpringProject.member.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -52,12 +49,26 @@ public class MemberService {
     }
 
     //로그인 사용자 정보 반환
-    public Member findLoginMember(String email){
-        return memberRepository.findByEmail(email).orElseThrow(()->new RuntimeException("사용자가 존재하지 않음"));
+    public MemberDto findLoginMember(String email){
+        return memberRepository.findByEmail(email)
+                .map(this::createMemberDto) //MemberDto 로 만들어 반환
+                .orElseThrow(()->new RuntimeException("사용자가 존재하지 않음"));
     }
 
     //온라인 오프라인 업데이트
     public void updateOnlineOffline(Long memberId, Status status){
         memberRepository.updateStatusByEmail(status, memberId);
+    }
+
+    private MemberDto createMemberDto(Member member){
+        return MemberDto.builder()
+                .id(member.getId())
+                .email(member.getEmail())
+                .username(member.getUsername())
+                .nickname(member.getNickname())
+                .birth(member.getBirth())
+                .createdate(member.getCreatedate())
+                .status(member.getStatus())
+                .build();
     }
 }

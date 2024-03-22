@@ -1,6 +1,7 @@
 package KoreatechJinJunGun.Win_SpringProject.member.controller;
 
 import KoreatechJinJunGun.Win_SpringProject.member.entity.Member;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.MemberDto;
 import KoreatechJinJunGun.Win_SpringProject.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +19,8 @@ public class MemberController {
     private final MemberService memberService;
 
     @GetMapping("/main/{email}")
-    public ResponseEntity<Member> mainPage(@PathVariable("email") String email) {
-        Member loginMember = memberService.findLoginMember(email);
+    public ResponseEntity<MemberDto> mainPage(@PathVariable("email") String email) {
+        MemberDto loginMember = memberService.findLoginMember(email);
         return new ResponseEntity<>(loginMember, HttpStatus.OK);
     }
 }
