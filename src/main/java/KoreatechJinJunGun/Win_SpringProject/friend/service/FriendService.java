@@ -83,7 +83,7 @@ public class FriendService {
 
     public void removeEachFriend(String memberName, String friendName){
         Member member = memberRepository.findByUsername(memberName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
-        Member friendMember = memberRepository.findByUsername(memberName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+        Member friendMember = memberRepository.findByUsername(friendName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
         friendRepository.deleteByMemberAndFriendMember(member, friendMember);
         friendRepository.deleteByMemberAndFriendMember(friendMember, member);
     }

@@ -77,7 +77,7 @@ public class FriendController {
     @GetMapping("/update-status/{memberId}/{status}")
     public ResponseEntity<Map<String, String>> clientConnectChange(@PathVariable("memberId") Long memberId, @PathVariable("status") Status status){
         memberService.updateOnlineOffline(memberId, status);
-        sendRefreshFriendList(memberId, "친구 리스트 새로고침");
+        sendRefreshFriendList(memberId, memberId.toString()+"_"+status.toString());
         return new ResponseEntity<>(getResponseBody("update user for " + status), HttpStatus.OK);
     }
 
