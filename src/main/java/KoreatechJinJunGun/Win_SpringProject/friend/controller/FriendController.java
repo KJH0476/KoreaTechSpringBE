@@ -4,6 +4,7 @@ import KoreatechJinJunGun.Win_SpringProject.friend.entity.FriendDto;
 import KoreatechJinJunGun.Win_SpringProject.friend.entity.FriendForm;
 import KoreatechJinJunGun.Win_SpringProject.friend.entity.FriendRelation;
 import KoreatechJinJunGun.Win_SpringProject.friend.service.FriendService;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.Member;
 import KoreatechJinJunGun.Win_SpringProject.member.entity.Status;
 import KoreatechJinJunGun.Win_SpringProject.member.service.MemberService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,7 +52,7 @@ public class FriendController {
         String friendEmail = friendService.requestFriend(friendForm);
 
         //웹소켓 실시간 요청 알림을 친구에게 보냄
-        sendFriendRequestNotification(friendEmail, friendForm.getMemberName() + " 님이 친구 요청을 보냈습니다.", "REQUEST");
+        sendFriendRequestNotification(friendEmail, "REQUESTED", friendForm.getMemberName(), friendForm.getMemberName() + " 님이 친구 요청을 보냈습니다.");
         log.info("친구 요청 완료 {} -> {}", friendForm.getMemberName(), friendForm.getFriendName());
 
         return new ResponseEntity<>(getResponseBody("새로운 친구 요청"), HttpStatus.OK);
@@ -60,7 +61,9 @@ public class FriendController {
     //친구 수락
     @PostMapping("/received-friend")
     public ResponseEntity<Map<String, String>> okFriend(@RequestBody FriendForm friendForm){
-        friendService.receivedFriend(friendForm.getMemberName(), friendForm.getFriendName());
+        Member friendMember = friendService.receivedFriend(friendForm.getMemberName(), friendForm.getFriendName());
+
+        sendFriendRequestNotification(friendMember.getEmail(), "ACCEPTED", friendForm.getMemberName(),friendForm.getMemberName()+" 님과 친구가 되었습니다.");
 
         return new ResponseEntity<>(getResponseBody("친구 요청을 수락하였습니다."), HttpStatus.OK);
     }
@@ -68,7 +71,9 @@ public class FriendController {
     //친구 삭제, 거절
     @PostMapping("/delete-friend")
     public ResponseEntity<Map<String, String>> removeFriend(@RequestBody FriendForm friendForm){
-        friendService.removeEachFriend(friendForm.getMemberName(), friendForm.getFriendName());
+        Member friendMember = friendService.removeEachFriend(friendForm.getMemberName(), friendForm.getFriendName());
+
+        sendFriendRequestNotification(friendMember.getEmail(), "REFUSED", friendForm.getMemberName(), friendForm.getMemberName()+" 님이 친구 요청을 거절하였습니다.");
 
         return new ResponseEntity<>(getResponseBody("친구를 삭제하였습니다."), HttpStatus.OK);
     }
@@ -89,13 +94,17 @@ public class FriendController {
     }
 
     //친구 요청 알림 메세지 전달
-    public void sendFriendRequestNotification(String friendEmail, String sendMessage, String status){
+    public void sendFriendRequestNotification(String friendEmail, String type, String name, String message){
+        Map<String, String> sendMessage = new ConcurrentHashMap<>();
+        sendMessage.put("type", type);
+        sendMessage.put("name", name);
+        sendMessage.put("message", message);
         //특정 사용자에게 메시지를 보내려 할 때 convertAndSendToUser 메서드의 첫 번째 인자는 SpringSecurity 가 관리하는 사용자 식별자와 일치해야 함
         //현재 SpringSecurity 가 관리하는 식별자는 Email
         simpMessagingTemplate.convertAndSendToUser(friendEmail, "/queue/Notification", sendMessage);
     }
 
-    //친구들에게 친구 리스트 새로고침 요청 메세지 전달
+    //친구들에게 온라인, 오프라인 변경 여부 전달
     public void sendRefreshFriendList(Long memberId, String sendMessage){
         log.info("reloadFriendList");
         List<FriendDto> friend = friendService.findFriend(memberId, FriendRelation.FRIENDS);

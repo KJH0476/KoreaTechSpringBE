@@ -73,19 +73,23 @@ public class FriendService {
         friendRepository.save(friend);
     }
 
-    public void receivedFriend(String memberName, String friendName){
+    public Member receivedFriend(String memberName, String friendName){
         Date date = new Date(System.currentTimeMillis());
         Member member = memberRepository.findByUsername(memberName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
         Member friendMember = memberRepository.findByUsername(friendName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
         friendRepository.updateFriendRelation(FriendRelation.FRIENDS, date, member, friendMember);
         friendRepository.updateFriendRelation(FriendRelation.FRIENDS, date, friendMember, member);
+
+        return friendMember;
     }
 
-    public void removeEachFriend(String memberName, String friendName){
+    public Member removeEachFriend(String memberName, String friendName){
         Member member = memberRepository.findByUsername(memberName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
         Member friendMember = memberRepository.findByUsername(friendName).orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
         friendRepository.deleteByMemberAndFriendMember(member, friendMember);
         friendRepository.deleteByMemberAndFriendMember(friendMember, member);
+
+        return friendMember;
     }
 
     private FriendDto convertToDto(Friend friend) {
