@@ -89,21 +89,20 @@ public class JwtFilter extends GenericFilterBean {
 
                 //응답 바디 생성
                 Map<String, String> map = new ConcurrentHashMap<>();
-                map.put("message", "New tokens are provided");
+                map.put("message", "NEW_ACCESS_TOKEN");
                 map.put("token", token.getAccessToken());
                 String body = objectMapper.writeValueAsString(map);
 
-                //로그인 갱신 성공시 헤더에 새로 생성한 액세스 토큰과 상태 코드 401 응답
+                //로그인 갱신 성공시 액세스 토큰을 포함하여 상태 코드 401로 응답
+                response.setContentType("application/json;charset=UTF-8");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.addHeader("Error-Message", "NEW_ACCESS_TOKEN");
                 response.getWriter().write(body);
             }
         } else {
             //db에 refresh 토큰 기간이 만료되어 삭제되면 null을 반환
-            //리프레시 토큰 또한 만료되면 헤더에 메세지 넣어 클라이언트에게 다시 로그인 요청 상태코드 401 응답
+            //리프레시 토큰 또한 만료되면 클라이언트에게 다시 로그인 요청 상태코드 401 응답
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.addHeader("Error-Message", "REFRESH_TOKEN_EXPIRED");
-            response.getWriter().write("Refresh token expired too, try login again");
+            response.getWriter().write("REFRESH_TOKEN_EXPIRED_TOO");
         }
     }
 
