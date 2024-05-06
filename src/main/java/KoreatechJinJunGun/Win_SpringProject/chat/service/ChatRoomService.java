@@ -1,56 +1,70 @@
 package KoreatechJinJunGun.Win_SpringProject.chat.service;
 
-import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatroom.ChatRoom;
+import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.ChatRoom;
+import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.ChatRoomInfo;
+import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.dto.ChatRoomDto;
+import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.dto.ChatRoomInfoDto;
+import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.dto.ChatRoomMemberDto;
+import KoreatechJinJunGun.Win_SpringProject.member.entity.Member;
+import KoreatechJinJunGun.Win_SpringProject.member.repository.MemberRepository;
 import KoreatechJinJunGun.Win_SpringProject.chat.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final MemberRepository memberRepository;
 
-    public Optional<String> getChatRoomId(
-            String senderId,
-            String recipientId,
-            boolean createNewRoomIfNotExists
-    ) {
-        return chatRoomRepository
-                .findBySenderIdAndRecipientId(senderId, recipientId)
-                .map(ChatRoom::getChatId)
-                .or(() -> {
-                    if(createNewRoomIfNotExists) {
-                        var chatId = createChatId(senderId, recipientId);
-                        return Optional.of(chatId);
-                    }
+    public List<ChatRoom> addChatRoom(ChatRoomInfo chatRoomInfo, ChatRoomDto chatRoomDto){
 
-                    return  Optional.empty();
-                });
+        return chatRoomRepository.saveAll(Arrays.asList(
+                ChatRoom.builder()
+                        .memberId(findParticipant(chatRoomDto.getFirstParticipantId()))
+                        .chatRoomId(chatRoomInfo)
+                        .build(),
+                ChatRoom.builder()
+                        .memberId(findParticipant(chatRoomDto.getSecondParticipantId()))
+                        .chatRoomId(chatRoomInfo)
+                        .build()
+                )
+        );
     }
 
-    private String createChatId(String senderId, String recipientId) {
-        var chatId = String.format("%s_%s", senderId, recipientId);
+    public List<ChatRoomInfoDto> findChatRoomInfoByChatRoom(Long memberId){
+        List<ChatRoom> chatRooms = chatRoomRepository.findAllChatRoomsAndMembersByMemberId(memberId);
 
-        ChatRoom senderRecipient = ChatRoom
-                .builder()
-                .chatId(chatId)
-                .senderId(senderId)
-                .recipientId(recipientId)
-                .build();
+        Map<ChatRoomInfo, List<ChatRoomMemberDto>> chatRoomInfoMap = chatRooms.stream()
+                .filter(chatRoom -> !chatRoom.getMemberId().getId().equals(memberId))   //자기 자신을 제외함
+                .collect(Collectors.groupingBy(
+                        ChatRoom::getChatRoomId,
+                        Collectors.mapping(
+                                chatRoom -> new ChatRoomMemberDto(
+                                        chatRoom.getMemberId().getEmail(),
+                                        chatRoom.getMemberId().getUsername(),
+                                        chatRoom.getMemberId().getNickname()),
+                                Collectors.toList()
+                        )
+                ));
 
-        ChatRoom recipientSender = ChatRoom
-                .builder()
-                .chatId(chatId)
-                .senderId(recipientId)
-                .recipientId(senderId)
-                .build();
+        return chatRoomInfoMap.entrySet().stream()
+                .map(entry -> ChatRoomInfoDto.builder()
+                        .chatRoomInfo(entry.getKey())
+                        .memberList(entry.getValue())
+                        .build())
+                .collect(Collectors.toList());
+    }
 
-        chatRoomRepository.save(senderRecipient);
-        chatRoomRepository.save(recipientSender);
-
-        return chatId;
+    private Member findParticipant(Long id){
+        return memberRepository
+                .findById(id)
+                .orElse(null);
     }
 }

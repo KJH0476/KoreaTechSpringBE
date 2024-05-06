@@ -1,21 +1,28 @@
-package KoreatechJinJunGun.Win_SpringProject.chat.entity.chatroom;
+package KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom;
 
+import KoreatechJinJunGun.Win_SpringProject.member.entity.Member;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Entity
 @Builder
-@Document
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ChatRoom {
+
     @Id
-    private String id;
-    private String chatId;
-    private String senderId;
-    private String recipientId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "memberId", referencedColumnName = "id")
+    Member memberId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chatRoomId", referencedColumnName = "id")
+    ChatRoomInfo chatRoomId;
 }
