@@ -23,6 +23,7 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
 
+    //새로운 채팅방 생성
     public List<ChatRoom> addChatRoom(ChatRoomInfo chatRoomInfo, ChatRoomDto chatRoomDto){
 
         return chatRoomRepository.saveAll(Arrays.asList(
@@ -38,6 +39,19 @@ public class ChatRoomService {
         );
     }
 
+    //기존 채팅방에 새로운 사용자 추가
+    public ChatRoom plusMemberInChatRoom(ChatRoomInfo chatRoomInfo, Long memberId) {
+        Optional<ChatRoom> chatRoom = chatRoomRepository.findByMemberIdAndChatRoomId(findParticipant(memberId), chatRoomInfo);
+        if (chatRoom.isPresent()) return null;  //채팅방이 이미 존재하면 null 반환
+        else {
+            return chatRoomRepository.save(ChatRoom.builder()
+                    .chatRoomId(chatRoomInfo)
+                    .memberId(findParticipant(memberId))
+                    .build());
+        }
+    }
+
+    //사용자별 참여중인 채팅방 조회
     public List<ChatRoomInfoDto> findChatRoomInfoByChatRoom(Long memberId){
         List<ChatRoom> chatRooms = chatRoomRepository.findAllChatRoomsAndMembersByMemberId(memberId);
 

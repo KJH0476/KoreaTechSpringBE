@@ -4,6 +4,7 @@ import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.ChatRoom;
 import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.ChatRoomInfo;
 import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.dto.ChatRoomDto;
 import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.dto.ChatRoomInfoDto;
+import KoreatechJinJunGun.Win_SpringProject.chat.entity.chatRoom.dto.ChatRoomMemberDto;
 import KoreatechJinJunGun.Win_SpringProject.chat.service.ChatRoomInfoService;
 import KoreatechJinJunGun.Win_SpringProject.chat.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,27 @@ public class ChatRoomController {
         List<ChatRoomInfoDto> chatRoomInfos = chatRoomService.findChatRoomInfoByChatRoom(ch.getFirstParticipantId());
 
         return new ResponseEntity<>(chatRoomInfos, HttpStatus.OK);
+    }
+
+    @PostMapping("/invite-chatRoom")
+    public ResponseEntity<?> inviteChatRoom(@RequestBody ChatRoomDto ch) {
+        ChatRoomInfo newChatRoomInfo = chatRoomInfoService.createAndAddChatRoomInfo(ch.getRoomId(), ch.getRoomName());
+
+        ChatRoom chatRoom = chatRoomService.plusMemberInChatRoom(newChatRoomInfo, ch.getFirstParticipantId());
+
+        if (chatRoom == null) {
+            //이미 채팅방에 사용자가 참여중일 경우, 409 상태코드와 함께 메시지 반환
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("사용자가 이미 채팅방에 참여중입니다.");
+        }
+
+        return new ResponseEntity<>(
+                ChatRoomMemberDto.builder()
+                        .email(chatRoom.getMemberId().getEmail())
+                        .name(chatRoom.getMemberId().getUsername())
+                        .nickname(chatRoom.getMemberId().getNickname())
+                        .build(),
+                HttpStatus.OK
+        );
     }
 
     @GetMapping("/find-chatRoom/{memberId}")
