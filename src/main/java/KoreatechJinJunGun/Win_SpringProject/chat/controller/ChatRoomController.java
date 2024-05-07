@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -41,6 +44,8 @@ public class ChatRoomController {
         ChatRoomInfo newChatRoomInfo = chatRoomInfoService.createAndAddChatRoomInfo(ch.getRoomId(), ch.getRoomName());
 
         ChatRoom chatRoom = chatRoomService.plusMemberInChatRoom(newChatRoomInfo, ch.getFirstParticipantId());
+
+        notifyCreateChatRoom(new ArrayList<>(Collections.singletonList(chatRoom)));
 
         if (chatRoom == null) {
             //이미 채팅방에 사용자가 참여중일 경우, 409 상태코드와 함께 메시지 반환
