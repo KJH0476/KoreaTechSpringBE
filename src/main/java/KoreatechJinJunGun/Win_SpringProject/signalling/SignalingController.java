@@ -20,6 +20,7 @@ public class SignalingController {
      * roomId: 룸 아이디
      * email: 상대방 이메일
      */
+    //Offer 전달
     @MessageMapping("/videoCall/offer/{email}/{roomId}")
     @SendTo("/topic/videoCall/offer/{email}/{roomId}")
     public OfferAnswerMessage sendOffer(@Payload OfferAnswerMessage offer, @DestinationVariable(value = "email") String email,
@@ -28,6 +29,7 @@ public class SignalingController {
         return offer;
     }
 
+    //Answer 전달
     @MessageMapping("/videoCall/answer/{email}/{roomId}")
     @SendTo("/topic/videoCall/answer/{email}/{roomId}")
     public OfferAnswerMessage sendAnswer(@Payload OfferAnswerMessage answer, @DestinationVariable(value = "email") String email,
@@ -36,6 +38,7 @@ public class SignalingController {
         return answer;
     }
 
+    //IceCandidate 협상
     @MessageMapping("/videoCall/iceCandidate/{email}/{roomId}")
     @SendTo("/topic/videoCall/iceCandidate/{email}/{roomId}")
     public IceMessage negotiationIceCandidate(@Payload IceMessage candidate, @DestinationVariable(value = "email") String email,
@@ -44,6 +47,7 @@ public class SignalingController {
         return candidate;
     }
 
+    //화상 통화 요청
     @MessageMapping("/requestCall/{email}")
     @SendTo("/topic/requestCall/{email}")
     public CallMessage requestCall(@Payload CallMessage message, @DestinationVariable(value = "email") String email) {
@@ -51,9 +55,18 @@ public class SignalingController {
         return message;
     }
 
+    //화상 통화 수락
     @MessageMapping("/receiveCall/{email}")
     @SendTo("/topic/receiveCall/{email}")
     public CallMessage receiveCall(@Payload CallMessage message, @DestinationVariable(value = "email") String email) {
+        log.info("Receive VideoCall to {}", message.getEmail());
+        return message;
+    }
+
+    //화상 통화 종료
+    @MessageMapping("/exitCall/{email}")
+    @SendTo("/topic/exitCall/{email}")
+    public CallMessage exitCall(@Payload CallMessage message, @DestinationVariable(value = "email") String email) {
         log.info("Receive VideoCall to {}", message.getEmail());
         return message;
     }
