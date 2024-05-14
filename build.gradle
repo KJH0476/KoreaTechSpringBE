@@ -21,6 +21,10 @@ repositories {
 	mavenCentral()
 }
 
+jar {
+	enabled = false
+}
+
 dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-data-mongodb"
 	implementation 'com.mysql:mysql-connector-j'
@@ -38,6 +42,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+	implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
 	// jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
